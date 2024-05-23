@@ -19,7 +19,6 @@ def exact_solution_at_1(x):
 
 #### numerical scheme ####
 def eulerexplicit(N, M):
-    # todo 3 b)
     k=1/M
     h=1/N
     ones= np.ones(N-1)
@@ -36,7 +35,6 @@ def eulerexplicit(N, M):
 
 
 def eulerimplicit(N, M):
-    # todo 3 b)
     k=1/M
     h=1/N
     ones= np.ones(N-1)
