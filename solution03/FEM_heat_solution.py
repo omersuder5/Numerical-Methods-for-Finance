@@ -23,16 +23,14 @@ def initial_value(x):
 def exact_solution_at_1(x):
     return np.exp(-1)*x*np.sin(np.pi*x)
 
-
-def build_F(t, N, beta):
-    X = np.linspace(0,1,N+2)**beta
-    h = np.diff(X)
-    a = f(t, X[1:-1])
-    ab2 = f(t, (X[:-2] + X[1:-1])/2)
-    b = f(t, (X[1:-1] + X[2:])/2)
-    
-    return a*(h[:-1] + h[1:])/6 + ab2*h[:-1]/3 + b*h[1:]/3
-
+def build_F(t,N,beta):
+    h=1/(N+1)
+    x = np.array([(h*(i))**beta for i in range(N+2)])
+    h = np.diff(x)
+    a = 1/3*f(t,(x[:-2]+x[1:-1])/2)*h[:-1]
+    b = 1/3*f(t,(x[2:]+x[1:-1])/2)*h[1:]
+    c = 1/6*(h[:-1]+h[1:])*f(t,x[1:-1])
+    return a+b+c
 
 def FEM_theta(N, M, beta, theta):
     k = 1/M

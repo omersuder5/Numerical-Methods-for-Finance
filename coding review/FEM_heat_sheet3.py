@@ -5,16 +5,25 @@ import scipy.sparse as sp
 from scipy.sparse.linalg import spsolve
 
 
-def build_massMatrix(N):
-    a = 1/6 * np.ones(N-1)
-    M = sp.diags(a,-1) + sp.diags(a,1) + 2/3 * sp.eye(N)
-    return 1/(N+1) * M
+def build_massMatrix(N,beta):
+    h=1/(N+1)
+    x = np.array([(h*(i))**beta for i in range(N+2)])
+    h = np.diff(x)
+    diag = sp.diags((h[:-1]+h[1:])/3,0)
+    diag1 = sp.diags(h[1:-1]/6,1)
+    diag2 = sp.diags(h[1:-1]/6,-1)
+    return diag + diag1 + diag2
 
 
-def build_rigidityMatrix(N):
-    a = -1 * np.ones(N-1)
-    M = sp.diags(a,-1) + sp.diags(a,1) + 2*sp.eye(N)
-    return (N+1) * M
+
+def build_rigidityMatrix(N,beta):
+    h=1/(N+1)
+    x = np.array([(h*(i))**beta for i in range(N+2)]) #hi=x_i-x_{i-1} i=1,...,N+1
+    h = np.diff(x)
+    diag = sp.diags(1/h[:-1] + 1/h[1:],0)
+    diag1 = sp.diags(-1/h[1:-1],1)
+    diag2 = sp.diags(-1/h[1:-1],-1)
+    return diag + diag1 + diag2
 
 
 def f(t,x):
@@ -29,18 +38,24 @@ def exact_solution_at_1(x):
     return np.exp(-1)*x*np.sin(np.pi*x)
 
 
-def build_F(t,N):
-    h = 1/(N+1)
-    i_values = np.arange(N)
-    return h * 1/3 * (f(t, h * (i_values + 0.5)) + f(t, h * (i_values + 1)) + f(t, h * (i_values + 1.5)))
+def build_F(t,N,beta):
+    h=1/(N+1)
+    x = np.array([(h*(i))**beta for i in range(N+2)])
+    h = np.diff(x)
+    a = 1/3*f(t,(x[:-2]+x[1:-1])/2)*h[:-1]
+    b = 1/3*f(t,(x[2:]+x[1:-1])/2)*h[1:]
+    c = 1/6*(h[:-1]+h[1:])*f(t,x[1:-1])
+    return a+b+c
 
 
-def FEM_theta(N,M,theta):
+def FEM_theta(N,M,beta,theta):
     k = 1/M
-    grid = (1/(N+1))*(np.arange(N)+1)
-    u_sol = initial_value(grid)
-    MatrixM = build_massMatrix(N)
-    MatrixA = build_rigidityMatrix(N)
+    h=1/(N+1)
+    x = np.array([(h*(i))**beta for i in range(N+2)])
+    u_sol = initial_value(x)[1:-1]
+
+    MatrixM = build_massMatrix(N,beta)
+    MatrixA = build_rigidityMatrix(N,beta)
     B_theta = MatrixM + k*theta*MatrixA
     C_theta = MatrixM - k*(1-theta)*MatrixA
     
@@ -48,7 +63,7 @@ def FEM_theta(N,M,theta):
     C_theta = C_theta.tocsr()
     
     for i in range(M):
-        F_theta = k*theta*build_F(k*(i+1),N) + k*(1-theta)*build_F(k*i,N)
+        F_theta = k*theta*build_F(k*(i+1),N,beta) + k*(1-theta)*build_F(k*i,N,beta)
         RHS = C_theta@u_sol + F_theta
         u_sol = spsolve(B_theta, RHS)
         
@@ -61,9 +76,9 @@ N = np.power(2, np.arange(2, 2 + nb_samples))-1
 # M in the case of 3 d)
 M = np.power(4, np.arange(2, 2 + nb_samples))
 # M in the case of 3 e)
-# M = 7*np.power(4, np.arange(2, 2 + nb_samples))
-theta = ...
-beta = ...
+#M = 7*np.power(4, np.arange(2, 2 + nb_samples))
+theta = 1
+beta = 1.05
 
 #### Do not change any code below! ####
 l2error = np.zeros(nb_samples)
