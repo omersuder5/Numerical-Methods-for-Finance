@@ -43,43 +43,41 @@ def gamma(x):
 
 
 def build_rigidityMatrix(N, alpha, beta, gamma):
-    X = np.linspace(0, 1, N + 2)
-    Y = (X[:-1] + X[1:]) / 2
-    h = 1 / (N + 1)
+    # Todo : Implement the function build_rigidityMatrix
+    h=1/(N+1)
+    x = np.array([i*h for i in range(N+2)])
+    y = (x[1:]+x[:-1])/2
 
-    a1 = alpha(X)
-    a2 = alpha(Y)
+    a1 = alpha(x)
+    a2 = alpha(y)
+    b1 = beta(x)
+    b2 = beta(y)
+    c1 = gamma(x)
+    c2 = gamma(y)
 
-    b1 = beta(X)
-    b2 = beta(Y)
+    diag0 = 1/h*(
+        a1[:-2]+4*a2[:-1]+a1[1:-1]
+        +2*h*b2[:-1]+h*b1[1:-1]
+        +h*h*c1[1:-1]+h*h*c2[:-1]
 
-    c1 = gamma(X)
-    c2 = gamma(Y)
+        +a1[1:-1]+4*a2[1:]+a1[2:]
+        -2*h*b2[1:]-h*b1[1:-1]
+        +h*h*c1[1:-1]+h*h*c2[1:]
+    )/6
+    
+    diag_up = 1/h*(
+        -a1[1:-2]-4*a2[1:-1]-a1[2:-1]
+        +2*h*b2[1:-1]+h*b1[1:-2]
+        +2*h*h*c2[1:-1]
+    )/6
 
-    d3 = (
-        -1 / h * (a1[1:-2] + 4 * a2[1:-1] + a1[2:-1])
-        + b1[1:-2]
-        + 2 * b2[1:-1]
-        + h * c2[1:-1]
-    ) / 6
-    d1 = (
-        -1 / h * (a1[1:-2] + 4 * a2[1:-1] + a1[2:-1])
-        - b1[2:-1]
-        - 2 * b2[1:-1]
-        + h * c2[1:-1]
-    ) / 6
-    d2 = (
-        1 / h * (a1[:-2] + 4 * a2[:-1] + a1[1:-1])
-        + 2 * b2[:-1]
-        + b1[1:-1]
-        + h * (c2[:-1] + c1[1:-1])
-        + 1 / h * (a1[1:-1] + 4 * a2[1:] + a1[2:])
-        - 2 * b2[1:]
-        - b1[1:-1]
-        + h * (c2[1:] + c1[1:-1])
-    ) / 6
+    diag_down = 1/h*(
+        -a1[1:-2]-4*a2[1:-1]-a1[2:-1]
+        -2*h*b2[1:-1]-h*b1[2:-1]
+        +2*h*h*c2[1:-1]
+    )/6
 
-    return sp.diags([d1, d2, d3], [-1, 0, 1])
+    return sp.diags([diag_down, diag0, diag_up], [-1, 0, 1])
 
 
 def f(t, x):
