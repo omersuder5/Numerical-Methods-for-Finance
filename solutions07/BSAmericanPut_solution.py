@@ -72,7 +72,9 @@ def build_G(N, r, sigma, K):
     ind1 = np.where(xi <= np.log(K))
     ind1 = ind1[0]
     ind2 = np.where(xi >= np.log(K))
+    print(ind2)
     ind2 = ind2[0]
+    print(ind2)
     i0 = ind1[-1]
     j0 = ind2[0]
     # log(K) is in [xi0,xj0]

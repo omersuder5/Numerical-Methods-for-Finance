@@ -13,34 +13,30 @@ def criterion(A, b, c, x, tol):
     crit2 = np.all(u2 > -tol)
     return critOrtho and crit1 and crit2
 
+
+
 def PSOR(A, b, c, x0):
     # Algorithm Parameters
     omega = 1.5
     epsilon = 1e-6
     maxit = 1000
+    x=x0
+    it=0
 
-    # Preparation
-    N = np.shape(A)[1]
-    L = np.tril(A, k=-1)
-    U = np.triu(A, k=1)
-
-    # Initialization
-    xk = x0
-    crit = criterion(A, b, c, xk, epsilon)
-    it = 0
-    while (not crit) and (it < maxit):
-        it = it + 1
-        xkp1 = xk.copy()
-        y = np.zeros(N)
-        for i in range(N):
-            y[i] = 1 / A[i, i] * (b[i] - np.dot(L[i, :], xkp1) - np.dot(U[i, :], xk))
-            xkp1[i] = np.maximum(c[i], xk[i] + omega * (y[i] - xk[i]))
-        # crit = np.sqrt(np.dot(xk - xkp1,xk - xkp1)) < epsilon
-        xk = xkp1.copy()
-        crit = criterion(A, b, c, xk, epsilon)
-    if not crit:
+    L = np.tril(A,k=-1)
+    U = np.triu(A,1)
+    D = np.diag(A)
+    
+    while (it<maxit) and not(criterion(A,b,c,x,epsilon)):
+        it+=1
+        x_plus1 = x.copy()
+        for i in range(len(x0)):
+            x_plus1[i] = 1/D[i]*(b[i]-np.dot(L[i,:],x_plus1)-np.dot(U[i,:],x))
+            x_plus1[i] = np.maximum(c[i],x[i]+omega*(x_plus1[i]-x[i]))
+        x=x_plus1.copy()
+    if not criterion(A,b,c,x,epsilon):
         print("Warning: PSOR did not converge")
-    return xk
+    return x
 
 
 # Test the algorithm
